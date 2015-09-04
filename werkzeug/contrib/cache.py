@@ -98,7 +98,7 @@ class BaseCache(object):
                             indicates that the cache never expires.
     """
 
-    def __init__(self, default_timeout=300):
+    def __init__(self, default_timeout=None):
         self.default_timeout = default_timeout
 
     def get(self, key):
@@ -273,7 +273,7 @@ class SimpleCache(BaseCache):
                             0 indicates that the cache never expires.
     """
 
-    def __init__(self, threshold=500, default_timeout=300):
+    def __init__(self, threshold=500, default_timeout=None):
         BaseCache.__init__(self, default_timeout)
         self._cache = {}
         self.clear = self._cache.clear
@@ -369,7 +369,7 @@ class MemcachedCache(BaseCache):
                        different prefix.
     """
 
-    def __init__(self, servers=None, default_timeout=300, key_prefix=None):
+    def __init__(self, servers=None, default_timeout=None, key_prefix=None):
         BaseCache.__init__(self, default_timeout)
         if servers is None or isinstance(servers, (list, tuple)):
             if servers is None:
@@ -545,7 +545,7 @@ class RedisCache(BaseCache):
     """
 
     def __init__(self, host='localhost', port=6379, password=None,
-                 db=0, default_timeout=300, key_prefix=None, **kwargs):
+                 db=0, default_timeout=None, key_prefix=None, **kwargs):
         BaseCache.__init__(self, default_timeout)
         if isinstance(host, string_types):
             try:
@@ -685,7 +685,7 @@ class FileSystemCache(BaseCache):
     #: used for temporary files by the FileSystemCache
     _fs_transaction_suffix = '.__wz_cache'
 
-    def __init__(self, cache_dir, threshold=500, default_timeout=300,
+    def __init__(self, cache_dir, threshold=500, default_timeout=None,
                  mode=0o600):
         BaseCache.__init__(self, default_timeout)
         self._path = cache_dir
