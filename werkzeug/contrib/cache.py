@@ -287,7 +287,9 @@ class SimpleCache(BaseCache):
                 if (expires != 0 and expires <= now) or idx % 3 == 0:
                     toremove.append(key)
             for key in toremove:
-                self._cache.pop(key, None)
+                #self._cache.pop(key, None)
+                #MOD: non-delete cached elements automatically
+                pass
 
     def _get_expiration(self, timeout):
         if timeout is None:
