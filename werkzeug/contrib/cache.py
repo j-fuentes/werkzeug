@@ -143,7 +143,7 @@ class BaseCache(object):
         """
         return dict(zip(keys, self.get_many(*keys)))
 
-    def set(self, key, value, timeout=None):
+    def set(self, key, value, timeout=0):
         """Add a new key/value to the cache (overwrites value, if key already
         exists in the cache).
 
@@ -159,7 +159,7 @@ class BaseCache(object):
         """
         return True
 
-    def add(self, key, value, timeout=None):
+    def add(self, key, value, timeout=0):
         """Works like :meth:`set` but does not overwrite the values of already
         existing keys.
 
@@ -174,7 +174,7 @@ class BaseCache(object):
         """
         return True
 
-    def set_many(self, mapping, timeout=None):
+    def set_many(self, mapping, timeout=0):
         """Sets multiple keys and values from a mapping.
 
         :param mapping: a mapping with the keys/values to set.
@@ -304,14 +304,14 @@ class SimpleCache(BaseCache):
         except (KeyError, pickle.PickleError):
             return None
 
-    def set(self, key, value, timeout=None):
+    def set(self, key, value, timeout=0):
         expires = self._get_expiration(timeout)
         self._prune()
         self._cache[key] = (expires, pickle.dumps(value,
                                                   pickle.HIGHEST_PROTOCOL))
         return True
 
-    def add(self, key, value, timeout=None):
+    def add(self, key, value, timeout=0):
         expires = self._get_expiration(timeout)
         self._prune()
         item = (expires, pickle.dumps(value,
@@ -425,12 +425,12 @@ class MemcachedCache(BaseCache):
                     rv[key] = None
         return rv
 
-    def add(self, key, value, timeout=None):
+    def add(self, key, value, timeout=0):
         key = self._normalize_key(key)
         timeout = self._normalize_timeout(timeout)
         return self._client.add(key, value, timeout)
 
-    def set(self, key, value, timeout=None):
+    def set(self, key, value, timeout=0):
         key = self._normalize_key(key)
         timeout = self._normalize_timeout(timeout)
         return self._client.set(key, value, timeout)
@@ -439,7 +439,7 @@ class MemcachedCache(BaseCache):
         d = self.get_dict(*keys)
         return [d[key] for key in keys]
 
-    def set_many(self, mapping, timeout=None):
+    def set_many(self, mapping, timeout=0):
         new_mapping = {}
         for key, value in _items(mapping):
             key = self._normalize_key(key)
@@ -602,7 +602,7 @@ class RedisCache(BaseCache):
             keys = [self.key_prefix + key for key in keys]
         return [self.load_object(x) for x in self._client.mget(keys)]
 
-    def set(self, key, value, timeout=None):
+    def set(self, key, value, timeout=0):
         timeout = self._get_expiration(timeout)
         dump = self.dump_object(value)
         if timeout == -1:
@@ -613,7 +613,7 @@ class RedisCache(BaseCache):
                                         value=dump, time=timeout)
         return result
 
-    def add(self, key, value, timeout=None):
+    def add(self, key, value, timeout=0):
         timeout = self._get_expiration(timeout)
         dump = self.dump_object(value)
         return (
@@ -621,7 +621,7 @@ class RedisCache(BaseCache):
             self._client.expire(name=self.key_prefix + key, time=timeout)
         )
 
-    def set_many(self, mapping, timeout=None):
+    def set_many(self, mapping, timeout=0):
         timeout = self._get_expiration(timeout)
         # Use transaction=False to batch without calling redis MULTI
         # which is not supported by twemproxy
@@ -747,13 +747,13 @@ class FileSystemCache(BaseCache):
         except (IOError, OSError, pickle.PickleError):
             return None
 
-    def add(self, key, value, timeout=None):
+    def add(self, key, value, timeout=0):
         filename = self._get_filename(key)
         if not os.path.exists(filename):
             return self.set(key, value, timeout)
         return False
 
-    def set(self, key, value, timeout=None):
+    def set(self, key, value, timeout=0):
         if timeout is None:
             timeout = int(time() + self.default_timeout)
         elif timeout != 0:
